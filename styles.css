@@ -314,26 +314,8 @@ main {
   font-size: 0.9rem;
 }
 
+.run-row,
 .current-run {
-  margin-bottom: 0.75rem;
-  min-height: 2.5rem;
-  padding: 0.5rem 0.75rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius);
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  box-sizing: border-box;
-}
-
-.runs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.run-row {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 0.75rem 1rem;
@@ -343,28 +325,82 @@ main {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 0.875rem;
+  box-sizing: border-box;
+  /* Fixed height so scrollbar presence never changes row height or clips content */
+  height: 3.5rem;
+  min-height: 3.5rem;
+  max-height: 3.5rem;
+}
+
+.current-run {
+  margin-bottom: 0.75rem;
+  min-height: 2.5rem;
+  border-left: 3px solid var(--accent);
+}
+
+.runs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 .runs-list .run-row:first-child {
   border-left: 3px solid var(--accent);
 }
 
-.run-row .sequence {
+.run-row .sequence,
+.current-run .sequence {
   font-family: var(--font-mono);
-  word-break: break-all;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-height: 0;
+  min-width: 0;
+  /* Unobtrusive scrollbars: thin, theme-matched */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
-.run-row .tau {
+.run-row .sequence::-webkit-scrollbar,
+.current-run .sequence::-webkit-scrollbar {
+  height: 6px;
+}
+
+.run-row .sequence::-webkit-scrollbar-track,
+.current-run .sequence::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.run-row .sequence::-webkit-scrollbar-thumb,
+.current-run .sequence::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.run-row .sequence::-webkit-scrollbar-thumb:hover,
+.current-run .sequence::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.run-row .sequence::-webkit-scrollbar-button,
+.current-run .sequence::-webkit-scrollbar-button {
+  display: none;
+}
+
+.run-row .tau,
+.current-run .tau {
   color: var(--text-muted);
   white-space: nowrap;
 }
 
 @media (max-width: 640px) {
-  .run-row {
+  .run-row,
+  .current-run {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto;
   }
-  .run-row .sequence {
+  .run-row .sequence,
+  .current-run .sequence {
     grid-column: 1 / -1;
   }
 }
@@ -379,8 +415,15 @@ main {
   margin-top: 0.75rem;
 }
 
-.chart-container h3:first-child {
+.chart-container h3:first-child,
+.chart-container h4:first-child {
   margin-top: 0;
+}
+
+.chart-container h4 {
+  margin-top: 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
 }
 
 .chart-caption {
@@ -390,101 +433,61 @@ main {
   line-height: 1.45;
 }
 
+.tau-table-wrap {
+  margin-top: 1rem;
+}
+
+.tau-table-wrap .chart-caption {
+  margin-bottom: 0.35rem;
+}
+
+.tau-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.tau-table th,
+.tau-table td {
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tau-table thead th {
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.tau-table thead th:first-child {
+  text-align: left;
+}
+
+.tau-table tbody th {
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: left;
+  padding-right: 0.75rem;
+}
+
+.tau-table tbody td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.tau-table tbody td .katex {
+  font-size: 1em;
+}
+
+.tau-table tbody tr:hover {
+  background: var(--accent-subtle);
+}
+
 .tau-chart {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  height: 220px;
   min-height: 200px;
   padding: 0.25rem 0;
-}
-
-.tau-chart .tau-y-axis {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 2.5rem;
-  width: 3rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  display: flex;
-  flex-direction: column;
-  padding: 0.5rem 0;
-}
-
-.tau-chart .tau-y-label {
-  font-size: 0.7rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.25rem;
-}
-
-.tau-chart .tau-y-ticks {
-  flex: 1;
-  position: relative;
-  min-height: 2rem;
-}
-
-.tau-chart .tau-y-tick {
-  position: absolute;
-  left: 0;
-  transform: translateY(50%);
-  line-height: 1.2;
-}
-
-.tau-chart .tau-bars-wrap {
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 140px;
-  margin-left: 3rem;
-  padding: 0 0.25rem 0 0.5rem;
-  min-height: 6rem;
-}
-
-.tau-chart .tau-bar-wrap {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.25rem;
-}
-
-.tau-chart .tau-bar {
-  width: 100%;
-  min-height: 2px;
-  background: var(--accent);
-  border-radius: 2px 2px 0 0;
-  opacity: 0.88;
-  transition: opacity 0.15s ease, height 0.18s ease;
-}
-
-.tau-chart .tau-bar-wrap:hover .tau-bar {
-  opacity: 1;
-}
-
-.tau-chart .tau-bar-label {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.tau-chart .tau-x-axis {
-  margin-left: 3rem;
-  margin-top: 0.35rem;
-  padding-left: 0.5rem;
-}
-
-.tau-chart .tau-x-label {
-  font-size: 0.7rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
 }
 
 .chart-above-fold {
@@ -536,143 +539,38 @@ main {
   margin-top: 0.6rem;
 }
 
+.proof-sketch {
+  margin-top: 1rem;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--border);
+}
+
+.proof-sketch summary {
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+  list-style: none;
+  user-select: none;
+}
+
+.proof-sketch summary::-webkit-details-marker {
+  display: none;
+}
+
+.proof-sketch[open] summary {
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.proof-sketch p {
+  margin: 0;
+}
+
 .convergence-chart {
   height: 200px;
   position: relative;
   padding: 0.5rem 0;
   min-height: 10rem;
-}
-
-.convergence-chart .y-axis {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3.5rem;
-  font-size: 0.8125rem;
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  padding: 0.5rem 0;
-}
-
-.convergence-chart .y-axis-label {
-  flex-shrink: 0;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.35rem;
-  color: var(--text-muted);
-}
-
-.convergence-chart .y-axis-ticks {
-  flex: 1;
-  position: relative;
-  min-height: 3rem;
-}
-
-.convergence-chart .y-axis-ticks .y-tick {
-  position: absolute;
-  left: 0;
-  transform: translateY(-50%);
-  line-height: 1.2;
-}
-
-.convergence-chart .plot-area .chart-grid-line {
-  stroke: var(--border);
-  stroke-width: 0.5;
-  opacity: 0.7;
-}
-
-.chart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem 1.25rem;
-  font-size: 0.8125rem;
-  color: var(--text-muted);
-  margin-top: 0.5rem;
-  padding-left: 3.5rem;
-}
-
-.chart-legend .legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.chart-legend .legend-swatch {
-  width: 1.25rem;
-  height: 0.25rem;
-  border-radius: 1px;
-  flex-shrink: 0;
-}
-
-.chart-legend .legend-swatch-line {
-  background: var(--accent);
-}
-
-.chart-legend .legend-swatch-pi {
-  background: var(--danger);
-  opacity: 0.85;
-}
-
-.convergence-chart .plot-area {
-  position: absolute;
-  left: 3.5rem;
-  right: 0.5rem;
-  top: 0.5rem;
-  bottom: 2.25rem;
-  background: transparent;
-}
-
-.convergence-chart .x-axis {
-  position: absolute;
-  left: 3.5rem;
-  right: 0.5rem;
-  bottom: 0.35rem;
-  height: 1.75rem;
-  font-size: 0.8125rem;
-  color: var(--text);
-}
-
-.convergence-chart .x-axis-ticks {
-  position: relative;
-  width: 100%;
-  height: 1rem;
-}
-
-.convergence-chart .x-axis-ticks .x-tick {
-  position: absolute;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  line-height: 1.2;
-}
-
-.convergence-chart .x-axis-label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-top: 0.2rem;
-  color: var(--text-muted);
-}
-
-.convergence-chart .pi-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--danger);
-  opacity: 0.6;
-}
-
-.convergence-chart .plot-area svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  background: transparent;
 }
 
 
@@ -756,15 +654,6 @@ footer {
   }
 }
 
-.convergence-chart .plot-area .placeholder {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.8125rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
 
 /* KaTeX blocks */
 .katex-block {

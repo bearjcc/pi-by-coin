@@ -17,7 +17,7 @@
 
   <main>
     <section class="intro" aria-label="Introduction">
-      <p class="intro-lead">Did you know that you can calculate the value of pi by flipping coins? We flip until heads first lead, record the fraction of heads at that moment; the average of that fraction is &pi;/4, so 4&times;(fraction) estimates &pi;. Try it with the simulator below; <a href="#learn-more">learn more about it here</a>.</p>
+      <p class="intro-lead">Did you know that you can estimate the value of pi by flipping coins? We flip until heads first lead, then record the fraction of heads at that moment. If you do many runs and average those fractions, that average gets closer and closer to &pi;/4, so 4&times;(average) estimates &pi;. Try it with the simulator below; <a href="#explanation">learn why it works here</a>.</p>
       <div class="intro-numbers">
         <p><span class="intro-label">Your current estimate:</span> <span id="intro-estimate" class="intro-value intro-value-clip">4.000000000000000</span></p>
         <p><span class="intro-label">Pi's actual value:</span> <span class="intro-value intro-value-clip" title="3.141592653589793">3.141592653589793</span><a href="https://www.piday.org/million/" target="_blank" rel="noopener" class="intro-pi-link" title="First million digits of pi">...</a></p>
@@ -28,8 +28,8 @@
       <div class="controls">
         <div class="controls-left">
           <button type="button" id="flip-btn" class="btn btn-primary" title="Run one trial: flip until heads exceed tails, then add the result to your list.">Flip coins</button>
-          <button type="button" id="converge-btn" class="btn btn-secondary" title="Keep running trials until your average estimate shows 3.14, or stop with Abort.">Attempt Convergence</button>
-          <button type="button" id="abort-btn" class="btn btn-danger" hidden title="Stop the Attempt Convergence run.">Abort</button>
+          <button type="button" id="simulate-100-btn" class="btn btn-secondary" title="Run 100 trials at once with no delay; adds results to your estimate.">Simulate 100 runs</button>
+          <button type="button" id="simulate-1000-btn" class="btn btn-secondary" title="Run 1000 trials at once with no delay; adds results to your estimate.">Simulate 1000 runs</button>
         </div>
         <label class="turbo-toggle" for="turbo" title="Faster runs with no delay between flips.">
           <input type="checkbox" id="turbo" />
@@ -41,8 +41,10 @@
       <div id="current-run" class="current-run" aria-live="polite"></div>
       <div class="chart-container chart-above-fold">
         <h3>Your &pi; estimate over runs</h3>
-        <p class="chart-caption">Running average of 4&times;(fraction of heads when you stop). Each run adds one point. The horizontal line is &pi; &approx; 3.14.</p>
-        <div id="convergence-chart" class="convergence-chart"></div>
+        <p class="chart-caption">Running average of 4&times;(fraction of heads when you stop). Each run adds one point. We multiply by 4 to get an estimate of &pi;. The horizontal line is &pi; &approx; 3.14.</p>
+        <div class="convergence-chart">
+          <canvas id="convergence-chart" aria-label="Line chart: your pi estimate over run number"></canvas>
+        </div>
       </div>
       <details id="past-runs-details" class="past-runs-details">
         <summary><span id="past-runs-summary">Past runs (0)</span></summary>
@@ -50,31 +52,95 @@
       </details>
     </section>
 
-    <section id="charts-section" class="panel">
-      <h2>Charts</h2>
-      <div class="chart-container">
-        <h3>Stopping time distribution</h3>
-        <p class="chart-caption">Theoretical probability that a run stops after exactly <var>&tau;</var> flips (<var>&tau;</var> = 1, 3, 5, &hellip;). Height is probability (y-axis); each bar is one stopping time.</p>
-        <div id="tau-chart" class="tau-chart"></div>
-      </div>
-    </section>
-
     <section id="explanation" class="panel">
       <h2>Why does this work?</h2>
 
-      <h3>Probability and flipping coins</h3>
-      <p>We assume a <strong>fair coin</strong>: each flip is heads with probability 1/2 and tails with probability 1/2, and flips are <strong>independent</strong>. So the sequence you see is random in the sense that no flip influences another. We <strong>stop</strong> the first time the total number of heads is greater than the total number of tails, and we record the <strong>fraction</strong> of flips that were heads at that moment (e.g. 3 heads out of 5 flips gives 3/5). That fraction is always greater than 1/2 by construction.</p>
+      <h3>The game</h3>
+      <p>We use a <strong>fair coin</strong>: each flip is heads with probability 1/2 and tails with probability 1/2, and flips are <strong>independent</strong> (no flip influences another). We <strong>stop</strong> the first time the total number of heads is greater than the total number of tails, and we record the <strong>fraction</strong> of flips that were heads at that moment (e.g. 3 heads out of 5 flips gives 3/5). That fraction is always greater than 1/2.</p>
 
-      <h3>Why &pi;/4?</h3>
-      <p>It turns out that the <em>expected value</em> of that fraction is exactly <span class="katex-block" data-expr="\frac{\pi}{4}"></span>. So if you average many such fractions, you get an estimate of <span class="katex-block" data-expr="\pi/4"></span>, and multiplying by 4 gives an estimate of <span class="katex-block" data-expr="\pi"></span>. The proof uses the fact that the stopping time is always odd and that the number of ways to stop at time <span class="katex-block" data-expr="2k+1"></span> involves the <strong>Catalan numbers</strong>. The key identity is:</p>
-      <div class="katex-block" data-expr="\mathbb{E}[H_\tau/\tau] = \frac{1}{2}\arcsin(1) = \frac{\pi}{4}."></div>
-      <p>The series that appears when you write out the expectation is exactly the series for <span class="katex-block" data-expr="\frac{1}{2}\arcsin(1)"></span> evaluated at 1.</p>
+      <h3>Why a fixed number?</h3>
+      <p>When you do many runs and average those fractions, the average <strong>stabilizes</strong>: it tends to one fixed number. So we get a reliable estimate by repeating the process.</p>
+
+      <h3>That number is &pi;/4</h3>
+      <p>That limiting value is exactly <span class="katex-block" data-expr="\pi/4"></span>. So we multiply the average by 4 to estimate <span class="katex-block" data-expr="\pi"></span>. In math terms, the <em>expected value</em> of the fraction (the long-run average) is <span class="katex-block" data-expr="\pi/4"></span>.</p>
+
+      <h3>A useful picture: the random walk</h3>
+      <p>Think of each flip as a step: <strong>heads = +1</strong>, <strong>tails = −1</strong>. We start at 0 and add these steps. So we are watching a &ldquo;random walk&rdquo; that goes up or down by 1 each time. We stop the <strong>first time</strong> the total is positive (heads have just taken the lead). That moment is the end of the run.</p>
+
+      <h3>When we stop</h3>
+      <p>Because we go up or down by 1 each step, we can only go from 0 to positive in one step: we must have one more head than tail. So we can never stop after an even number of flips (you can check: 0, 2, 4, &hellip; flips always leave heads and tails tied or tails ahead). We stop only after <strong>1, 3, 5, 7, &hellip;</strong> flips. The number of flips when we stop is called the <strong>stopping time</strong> (often written <var>&tau;</var>).</p>
+
+      <h3>The distribution</h3>
+      <p>The chart below shows the probability that a run stops after exactly 1 flip, 3 flips, 5 flips, and so on. The chance of stopping at 1 flip is highest, then 3, then 5, &hellip;; that is why the bars look like this.</p>
+      <div class="chart-container">
+        <h4>Stopping time distribution</h4>
+        <p class="chart-caption">Probability that a run stops after exactly <var>&tau;</var> flips (<var>&tau;</var> = 1, 3, 5, &hellip;). Each bar is one possible stopping time.</p>
+        <div class="tau-chart">
+          <canvas id="tau-chart" aria-label="Bar chart: probability of stopping at each odd number of flips"></canvas>
+        </div>
+      </div>
+      <div class="tau-table-wrap">
+        <p class="chart-caption">For each stopping time <var>&tau;</var> (columns, same as chart): heads ratio at stop, probability, and number of distinct sequences (variations).</p>
+        <table class="tau-table" aria-label="Stopping time values: heads ratio, probability, and number of variations by tau">
+          <thead>
+            <tr>
+              <th scope="col"><var>&tau;</var></th>
+              <th scope="col">1</th>
+              <th scope="col">3</th>
+              <th scope="col">5</th>
+              <th scope="col">7</th>
+              <th scope="col">9</th>
+              <th scope="col">11</th>
+              <th scope="col">13</th>
+              <th scope="col">15</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Heads ratio</th>
+              <td><span class="katex-block" data-expr="\frac{1}{1}"></span></td>
+              <td><span class="katex-block" data-expr="\frac{2}{3}"></span></td>
+              <td><span class="katex-block" data-expr="\frac{3}{5}"></span></td>
+              <td><span class="katex-block" data-expr="\frac{4}{7}"></span></td>
+              <td><span class="katex-block" data-expr="\frac{5}{9}"></span></td>
+              <td><span class="katex-block" data-expr="\frac{6}{11}"></span></td>
+              <td><span class="katex-block" data-expr="\frac{7}{13}"></span></td>
+              <td><span class="katex-block" data-expr="\frac{8}{15}"></span></td>
+            </tr>
+            <tr>
+              <th scope="row">Probability</th>
+              <td><span class="katex-block" data-expr="\frac{1}{2}"></span></td>
+              <td><span class="katex-block" data-expr="\left(\frac{1}{2}\right)^3"></span></td>
+              <td><span class="katex-block" data-expr="\frac{1}{16}"></span></td>
+              <td><span class="katex-block" data-expr="\frac{5}{128}"></span></td>
+              <td><span class="katex-block" data-expr="\frac{7}{256}"></span></td>
+              <td><span class="katex-block" data-expr="\frac{21}{1024}"></span></td>
+              <td><span class="katex-block" data-expr="\frac{33}{2048}"></span></td>
+              <td><span class="katex-block" data-expr="\frac{429}{32768}"></span></td>
+            </tr>
+            <tr>
+              <th scope="row">Variations</th>
+              <td>1</td><td>1</td><td>2</td><td>5</td><td>14</td><td>42</td><td>132</td><td>429</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Who counts the paths? Catalan numbers</h3>
+      <p>The number of ways to stop at 3 flips, 5 flips, 7 flips, &hellip; is given by the <strong>Catalan numbers</strong>. Each run that stops at <span class="katex-block" data-expr="2k+1"></span> flips corresponds to a path that stays at or below zero for the first <span class="katex-block" data-expr="2k"></span> steps and ends at zero (tails never lead), then one head. The Catalan number <span class="katex-block" data-expr="C_k = \frac{1}{k+1}\binom{2k}{k}"></span> counts exactly those paths. So the probability we stop at <span class="katex-block" data-expr="2k+1"></span> is proportional to <span class="katex-block" data-expr="C_k"></span>, which is why the bar chart above has that shape.</p>
+      <p><a href="https://en.wikipedia.org/wiki/Catalan_number" target="_blank" rel="noopener">Catalan number (Wikipedia)</a> &middot; <a href="https://en.wikipedia.org/wiki/Bertrand%27s_ballot_theorem" target="_blank" rel="noopener">Ballot theorem (Wikipedia)</a></p>
+
+      <h3>Why that sum is &pi;/4</h3>
+      <p>When you write out the average of the fraction (using the probabilities for each stopping time), you get a sum that involves the Catalan numbers. That sum equals <span class="katex-block" data-expr="\frac{1}{2}\arcsin(1) = \frac{\pi}{4}"></span>. So the expected value of the fraction is exactly <span class="katex-block" data-expr="\pi/4"></span>.</p>
+      <details class="proof-sketch">
+        <summary>Proof sketch (for the curious)</summary>
+        <p>Let <span class="katex-block" data-expr="H_\tau"></span> be the number of heads when we stop and <span class="katex-block" data-expr="\tau"></span> the stopping time. At the moment we stop, we have one more head than tail and <span class="katex-block" data-expr="H_\tau + (\tau - H_\tau) = \tau"></span>, so <span class="katex-block" data-expr="H_\tau/\tau = \frac{1}{2} + \frac{1}{2\tau}"></span>. Taking expectations, <span class="katex-block" data-expr="\mathbb{E}[H_\tau/\tau] = \frac{1}{2} + \frac{1}{2}\mathbb{E}[1/\tau]"></span>. The distribution <span class="katex-block" data-expr="\mathbb{P}(\tau = 2k+1) = C_k/2^{2k+1}"></span> leads to <span class="katex-block" data-expr="\mathbb{E}[1/\tau] = \frac{\pi}{2}-1"></span> via the series for <span class="katex-block" data-expr="\arcsin"></span>. Hence <span class="katex-block" data-expr="\mathbb{E}[H_\tau/\tau] = \pi/4"></span>.</p>
+      </details>
     </section>
 
-    <section id="catalan" class="panel">
-      <h2>Catalan numbers</h2>
-      <p>The <strong>Catalan number</strong> <span class="katex-block" data-expr="C_k = \frac{1}{k+1}\binom{2k}{k}"></span> counts, among other things, the number of paths that stay at or below zero for the first <span class="katex-block" data-expr="2k"></span> steps and end at zero (like a ballot where tails never lead). Each such path, followed by one head, is a run that stops at <span class="katex-block" data-expr="\tau = 2k+1"></span>. So the probability that we stop at exactly <span class="katex-block" data-expr="2k+1"></span> flips is proportional to <span class="katex-block" data-expr="C_k"></span>, which is why the distribution chart above has that shape.</p>
-      <p><a href="https://en.wikipedia.org/wiki/Catalan_number" target="_blank" rel="noopener">Catalan number (Wikipedia)</a> &middot; <a href="https://en.wikipedia.org/wiki/Bertrand%27s_ballot_theorem" target="_blank" rel="noopener">Ballot theorem (Wikipedia)</a></p>
+    <section id="other-randomness" class="panel">
+      <h2>Other ways randomness gives &pi; (or cool shapes)</h2>
+      <p>This is not the only time randomness surprises us with &pi; or with structure. <strong>Buffon&rsquo;s needle</strong>: drop a needle on a ruled floor; the probability it crosses a line involves <span class="katex-block" data-expr="\pi"></span>. The <strong>chaos game</strong>: pick a vertex of a triangle at random, move halfway from your current point toward it, repeat; the points fill the <strong>Sierpiński triangle</strong>, a fractal. So randomness can reveal both &pi; and beautiful patterns.</p>
     </section>
 
     <section id="learn-more" class="panel">
@@ -94,6 +160,7 @@
     <button type="button" id="reset-btn" class="btn btn-text" title="Remove all saved runs and reset your estimate.">Clear all runs</button>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" crossorigin="anonymous"></script>
   <script src="app.js"></script>
 </body>
 </html>
