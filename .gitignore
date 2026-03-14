@@ -1,0 +1,10 @@
+# Ignore everything by default
+*
+# Keep .gitignore so clone preserves these rules
+!.gitignore
+# Allow directories so we can track files inside them
+!*/
+# Track only HTML, JS, and CSS
+!*.html
+!*.js
+!*.css
