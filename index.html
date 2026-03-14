@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="Pi Day experiment: flip a fair coin until heads lead, record the fraction, and watch your estimate of \u03c0 converge. The long-run average is exactly \u03c0/4."
+  />
   <title>Estimating &pi; with a Coin | Pi Day</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous" />
@@ -12,15 +16,16 @@
 <body>
   <header class="hero">
     <h1>Estimating &pi; with a Coin</h1>
-    <p class="tagline">Flip until heads lead, record the fraction. The average tends to &pi;/4.</p>
+    <p class="tagline">Flip until heads lead, then record the fraction. Average many runs and watch it tend to &pi;/4.</p>
+    <p class="hero-sub">A Pi Day experiment</p>
   </header>
 
   <main>
     <section class="intro" aria-label="Introduction">
-      <p class="intro-lead">Did you know that you can estimate the value of pi by flipping coins? We flip until heads first lead, then record the fraction of heads at that moment. If you do many runs and average those fractions, that average gets closer and closer to &pi;/4, so 4&times;(average) estimates &pi;. Try it with the simulator below; <a href="#explanation">learn why it works here</a>.</p>
+      <p class="intro-lead">Did you know you can estimate pi by flipping coins? We flip until heads lead for the first time, then record the fraction of heads at that moment. Do many runs and average those fractions; that average gets closer and closer to &pi;/4, so 4&times;(average) estimates &pi;. Try the simulator below, and <a href="#explanation">see why it works</a>.</p>
       <div class="intro-numbers">
-        <p><span class="intro-label">Your current estimate:</span> <span id="intro-estimate" class="intro-value intro-value-clip">4.000000000000000</span></p>
-        <p><span class="intro-label">Pi's actual value:</span> <span class="intro-value intro-value-clip" title="3.141592653589793">3.141592653589793</span><a href="https://www.piday.org/million/" target="_blank" rel="noopener" class="intro-pi-link" title="First million digits of pi">...</a></p>
+        <p><span class="intro-label">Your estimate:</span> <span id="intro-estimate" class="intro-value intro-value-clip" title="Starts at 4 (no data yet)">4.000000000000000</span></p>
+        <p><span class="intro-label">Actual &pi;:</span> <span class="intro-value intro-value-clip" title="3.141592653589793">3.141592653589793</span><a href="https://www.piday.org/million/" target="_blank" rel="noopener" class="intro-pi-link" title="First million digits of pi">...</a></p>
       </div>
     </section>
     <section id="flip-section" class="panel">
@@ -37,11 +42,17 @@
           <span class="toggle-label">Turbo</span>
         </label>
       </div>
-      <div id="converge-status" class="converge-status" hidden></div>
+      <div
+        id="converge-status"
+        class="converge-status"
+        role="status"
+        aria-live="polite"
+        hidden
+      ></div>
       <div id="current-run" class="current-run" aria-live="polite"></div>
       <div class="chart-container chart-above-fold">
         <h3>Your &pi; estimate over runs</h3>
-        <p class="chart-caption">Running average of 4&times;(fraction of heads when you stop). Each run adds one point. We multiply by 4 to get an estimate of &pi;. The horizontal line is &pi; &approx; 3.14.</p>
+        <p class="chart-caption">Running average of 4&times;(fraction of heads when you stop). Each run adds one point; the dashed line is &pi; &approx; 3.14.</p>
         <div class="convergence-chart">
           <canvas id="convergence-chart" aria-label="Line chart: your pi estimate over run number"></canvas>
         </div>
@@ -65,7 +76,7 @@
       <p>That limiting value is exactly <span class="katex-block" data-expr="\pi/4"></span>. So we multiply the average by 4 to estimate <span class="katex-block" data-expr="\pi"></span>. In math terms, the <em>expected value</em> of the fraction (the long-run average) is <span class="katex-block" data-expr="\pi/4"></span>.</p>
 
       <h3>A useful picture: the random walk</h3>
-      <p>Think of each flip as a step: <strong>heads = +1</strong>, <strong>tails = −1</strong>. We start at 0 and add these steps. So we are watching a &ldquo;random walk&rdquo; that goes up or down by 1 each time. We stop the <strong>first time</strong> the total is positive (heads have just taken the lead). That moment is the end of the run.</p>
+      <p>Think of each flip as a step: <strong>heads = +1</strong>, <strong>tails = -1</strong>. We start at 0 and add these steps. So we are watching a &ldquo;random walk&rdquo; that goes up or down by 1 each time. We stop the <strong>first time</strong> the total is positive (heads have just taken the lead). That moment is the end of the run.</p>
 
       <h3>When we stop</h3>
       <p>Because we go up or down by 1 each step, we can only go from 0 to positive in one step: we must have one more head than tail. So we can never stop after an even number of flips (you can check: 0, 2, 4, &hellip; flips always leave heads and tails tied or tails ahead). We stop only after <strong>1, 3, 5, 7, &hellip;</strong> flips. The number of flips when we stop is called the <strong>stopping time</strong> (often written <var>&tau;</var>).</p>
@@ -139,8 +150,8 @@
     </section>
 
     <section id="other-randomness" class="panel">
-      <h2>Other ways randomness gives &pi; (or cool shapes)</h2>
-      <p>This is not the only time randomness surprises us with &pi; or with structure. <strong>Buffon&rsquo;s needle</strong>: drop a needle on a ruled floor; the probability it crosses a line involves <span class="katex-block" data-expr="\pi"></span>. The <strong>chaos game</strong>: pick a vertex of a triangle at random, move halfway from your current point toward it, repeat; the points fill the <strong>Sierpiński triangle</strong>, a fractal. So randomness can reveal both &pi; and beautiful patterns.</p>
+      <h2>Other ways randomness gives &pi;</h2>
+      <p>This isn&rsquo;t the only time randomness surprises us with &pi; or with structure. <strong>Buffon&rsquo;s needle</strong>: drop a needle on a ruled floor; the probability it crosses a line involves <span class="katex-block" data-expr="\pi"></span>. The <strong>chaos game</strong>: pick a vertex of a triangle at random, move halfway toward it, repeat; the points fill the <strong>Sierpiński triangle</strong>, a fractal. Randomness can reveal both &pi; and beautiful patterns.</p>
     </section>
 
     <section id="learn-more" class="panel">
@@ -150,7 +161,7 @@
         <li><a href="https://mathenchant.wordpress.com/2026/03/12/in-praise-of-stupid-questions/" target="_blank" rel="noopener">James Propp: In Praise of Stupid Questions (Mathematical Enchantments)</a></li>
         <li><a href="https://arxiv.org/abs/2602.14487" target="_blank" rel="noopener">Estimating &pi; with a Coin</a> (Jim Propp, arXiv:2602.14487)</li>
       </ul>
-      <p>Convergence is slow: error typically decreases like <span class="katex-block" data-expr="1/N^{1/4}"></span> in the number of tosses, so getting many digits of &pi; this way is impractical (Matt Parker&rsquo;s 10,000 flips gave about 3.2).</p>
+      <p>Convergence is slow: error typically shrinks like <span class="katex-block" data-expr="1/N^{1/4}"></span> with the number of runs, so getting many digits of &pi; this way is impractical (Matt Parker&rsquo;s 10,000 flips gave about 3.2). Still, it&rsquo;s a lovely connection between coins and &pi;.</p>
     </section>
   </main>
 

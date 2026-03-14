@@ -53,6 +53,8 @@
   var runs = [];
   var isFlipping = false;
   var isSimulating = false;
+  var rushCurrentRun = false;
+  var finishCurrentThenStartNext = false;
 
   var flipBtn = document.getElementById("flip-btn");
   var simulate100Btn = document.getElementById("simulate-100-btn");
@@ -121,6 +123,26 @@
         if (onFlip) onFlip(sequence.slice(), heads, tails);
         if (turbo) {
           step();
+        } else if (rushCurrentRun) {
+          while (heads <= tails) {
+            var isHeadRush = randomBit() === 1;
+            sequence.push(isHeadRush ? "H" : "T");
+            if (isHeadRush) heads++;
+            else tails++;
+            if (onFlip) onFlip(sequence.slice(), heads, tails);
+          }
+          var tauRush = sequence.length;
+          var fractionRush = heads / tauRush;
+          var piEstRush = 4 * fractionRush;
+          var pctErrRush = (Math.abs(piEstRush - PI) / PI) * 100;
+          rushCurrentRun = false;
+          resolve({
+            sequence: sequence,
+            tau: tauRush,
+            fraction: fractionRush,
+            piEst: piEstRush,
+            pctErr: pctErrRush,
+          });
         } else {
           delay(FLIP_DELAY_MS).then(step);
         }
@@ -173,9 +195,16 @@
       pastRunsSummaryEl.textContent = "Past runs (" + pastCount + ")";
     }
     runsList.innerHTML = "";
-    runs.slice(1).forEach(function (r) {
-      runsList.appendChild(renderRunRow(r));
-    });
+    if (pastCount === 0) {
+      var empty = document.createElement("p");
+      empty.className = "runs-empty";
+      empty.textContent = "No past runs yet. Click \"Flip coins\" or \"Simulate 100 runs\" to start.";
+      runsList.appendChild(empty);
+    } else {
+      runs.slice(1).forEach(function (r) {
+        runsList.appendChild(renderRunRow(r));
+      });
+    }
     if (runs.length >= 2) {
       var avg = runs.reduce(function (sum, r) {
         return sum + r.fraction;
@@ -218,17 +247,24 @@
   }
 
   function doOneFlip() {
-    if (isFlipping || isSimulating) return;
+    if (isSimulating) return;
+    if (isFlipping) {
+      finishCurrentThenStartNext = true;
+      rushCurrentRun = true;
+      return;
+    }
     isFlipping = true;
-    flipBtn.disabled = true;
     if (simulate100Btn) simulate100Btn.disabled = true;
     if (simulate1000Btn) simulate1000Btn.disabled = true;
     runWithDelay(getTurbo(), renderCurrentRun).then(function (r) {
       showResult(r);
       isFlipping = false;
-      flipBtn.disabled = false;
       if (simulate100Btn) simulate100Btn.disabled = false;
       if (simulate1000Btn) simulate1000Btn.disabled = false;
+      if (finishCurrentThenStartNext) {
+        finishCurrentThenStartNext = false;
+        doOneFlip();
+      }
     });
   }
 
@@ -253,7 +289,7 @@
       var est = runs.length > 0
         ? (4 * runs.reduce(function (s, x) { return s + x.fraction; }, 0) / runs.length).toFixed(4)
         : "—";
-      convergeStatus.textContent = "Simulated " + n + " runs. Estimate: " + est;
+      convergeStatus.textContent = "After " + n + " runs, your estimate: " + est;
     }
     isSimulating = false;
     flipBtn.disabled = false;
@@ -404,7 +440,7 @@
             },
             subtitle: {
               display: true,
-              text: "Run some trials to see your estimate converge.",
+              text: "Run some trials to see your estimate converge toward \u03c0.",
               color: textMuted,
               font: { size: 13 },
             },
@@ -435,7 +471,7 @@
     var sub = convergenceChart.options.plugins.subtitle;
     if (sub) {
       sub.display = n === 0;
-      sub.text = n === 0 ? "Run some trials to see your estimate converge." : "";
+      sub.text = n === 0 ? "Run some trials to see your estimate converge toward \u03c0." : "";
     }
     if (convergenceChart.options.scales && convergenceChart.options.scales.x) {
       convergenceChart.options.scales.x.max = runMax;
