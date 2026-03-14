@@ -51,10 +51,22 @@
       ></div>
       <div id="current-run" class="current-run" aria-live="polite"></div>
       <div class="chart-container chart-above-fold">
-        <h3>Your &pi; estimate over runs</h3>
+        <div class="chart-header-row">
+          <h3>Your &pi; estimate over runs</h3>
+          <button type="button" id="chart-maximize-btn" class="btn btn-chart-max" title="Show chart larger for more detail">Enlarge chart</button>
+        </div>
         <p class="chart-caption">Running average of 4&times;(fraction of heads when you stop). Each run adds one point; the dashed line is &pi; &approx; 3.14.</p>
         <div class="convergence-chart">
           <canvas id="convergence-chart" aria-label="Line chart: your pi estimate over run number"></canvas>
+        </div>
+      </div>
+      <div id="chart-overlay" class="chart-overlay" role="dialog" aria-modal="true" aria-label="Enlarged pi estimate chart" hidden>
+        <div class="chart-overlay-backdrop"></div>
+        <div class="chart-overlay-content">
+          <button type="button" id="chart-overlay-close" class="btn chart-overlay-close" aria-label="Close enlarged chart">Close</button>
+          <div class="convergence-chart convergence-chart-maximized">
+            <canvas id="convergence-chart-maximized" aria-label="Enlarged line chart: your pi estimate over run number"></canvas>
+          </div>
         </div>
       </div>
       <details id="past-runs-details" class="past-runs-details">

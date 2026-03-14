@@ -73,7 +73,11 @@
   }
 
   var convergenceChart = null;
+  var convergenceChartMaximized = null;
   var tauChart = null;
+  var chartOverlay = document.getElementById("chart-overlay");
+  var chartMaximizeBtn = document.getElementById("chart-maximize-btn");
+  var chartOverlayClose = document.getElementById("chart-overlay-close");
   // #endregion
 
   // #region Persist
@@ -373,16 +377,12 @@
   // #endregion
 
   // #region Convergence chart – Chart.js
-  function updateConvergenceChart() {
-    var canvas = document.getElementById("convergence-chart");
-    if (!canvas || typeof Chart === "undefined") return;
-
+  function getConvergenceChartConfig() {
     var n = runs.length;
     var accent = getCssVar("--accent") || "#0d5a4c";
     var danger = getCssVar("--danger") || "#b91c1c";
     var textMuted = getCssVar("--text-muted") || "#5c5c5c";
     var grid = getCssVar("--border") || "#e2e0dc";
-
     var estimateData = [];
     var sum = 0;
     for (var i = 0; i < n; i++) {
@@ -391,92 +391,146 @@
     }
     var runMax = n >= 1 ? n : 1;
     var piLineData = [{ x: 1, y: PI }, { x: runMax, y: PI }];
+    return {
+      data: {
+        datasets: [
+          {
+            label: "Your estimate",
+            data: estimateData,
+            borderColor: accent,
+            backgroundColor: accent,
+            borderWidth: 2,
+            fill: false,
+            tension: 0.1,
+            pointRadius: n <= 100 ? 2 : 0,
+            pointHoverRadius: 4,
+          },
+          {
+            label: "\u03c0 \u2248 3.14",
+            data: piLineData,
+            borderColor: danger,
+            backgroundColor: "transparent",
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false, mode: "index" },
+        plugins: {
+          legend: {
+            display: true,
+            position: "top",
+            labels: { color: textMuted, usePointStyle: true },
+          },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                return ctx.dataset.label + ": " + (typeof ctx.raw.y === "number" ? ctx.raw.y.toFixed(4) : ctx.raw);
+              },
+            },
+          },
+          subtitle: {
+            display: n === 0,
+            text: "Run some trials to see your estimate converge toward \u03c0.",
+            color: textMuted,
+            font: { size: 13 },
+          },
+        },
+        scales: {
+          x: {
+            type: "linear",
+            min: 1,
+            max: runMax,
+            title: { display: true, text: "Run number", color: textMuted, font: { size: 11 } },
+            ticks: { color: textMuted, stepSize: 1 },
+            grid: { color: grid },
+          },
+          y: {
+            min: 2,
+            max: 4,
+            title: { display: true, text: "4 \u00d7 (avg fraction)", color: textMuted, font: { size: 11 } },
+            ticks: { color: textMuted },
+            grid: { color: grid },
+          },
+        },
+      },
+    };
+  }
 
+  function updateConvergenceChart() {
+    var canvas = document.getElementById("convergence-chart");
+    if (!canvas || typeof Chart === "undefined") return;
+
+    var config = getConvergenceChartConfig();
     if (!convergenceChart) {
       convergenceChart = new Chart(canvas, {
         type: "line",
-        data: {
-          datasets: [
-            {
-              label: "Your estimate",
-              data: estimateData,
-              borderColor: accent,
-              backgroundColor: accent,
-              borderWidth: 2,
-              fill: false,
-              tension: 0.1,
-              pointRadius: n <= 100 ? 2 : 0,
-              pointHoverRadius: 4,
-            },
-            {
-              label: "\u03c0 \u2248 3.14",
-              data: piLineData,
-              borderColor: danger,
-              backgroundColor: "transparent",
-              borderWidth: 1.5,
-              borderDash: [6, 4],
-              fill: false,
-              pointRadius: 0,
-              pointHoverRadius: 0,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { intersect: false, mode: "index" },
-          plugins: {
-            legend: {
-              display: true,
-              position: "top",
-              labels: { color: textMuted, usePointStyle: true },
-            },
-            tooltip: {
-              callbacks: {
-                label: function (ctx) {
-                  return ctx.dataset.label + ": " + (typeof ctx.raw.y === "number" ? ctx.raw.y.toFixed(4) : ctx.raw);
-                },
-              },
-            },
-            subtitle: {
-              display: true,
-              text: "Run some trials to see your estimate converge toward \u03c0.",
-              color: textMuted,
-              font: { size: 13 },
-            },
-          },
-          scales: {
-            x: {
-              type: "linear",
-              min: 1,
-              title: { display: true, text: "Run number", color: textMuted, font: { size: 11 } },
-              ticks: { color: textMuted, stepSize: 1 },
-              grid: { color: grid },
-            },
-            y: {
-              min: 2,
-              max: 4,
-              title: { display: true, text: "4 \u00d7 (avg fraction)", color: textMuted, font: { size: 11 } },
-              ticks: { color: textMuted },
-              grid: { color: grid },
-            },
-          },
-        },
+        data: config.data,
+        options: config.options,
       });
+    } else {
+      convergenceChart.data.datasets[0].data = config.data.datasets[0].data;
+      convergenceChart.data.datasets[1].data = config.data.datasets[1].data;
+      convergenceChart.data.datasets[0].pointRadius = config.data.datasets[0].pointRadius;
+      var sub = convergenceChart.options.plugins.subtitle;
+      if (sub) {
+        sub.display = config.options.plugins.subtitle.display;
+        sub.text = config.options.plugins.subtitle.text;
+      }
+      if (convergenceChart.options.scales && convergenceChart.options.scales.x) {
+        convergenceChart.options.scales.x.max = config.options.scales.x.max;
+      }
+      convergenceChart.update("none");
     }
+  }
 
-    convergenceChart.data.datasets[0].data = estimateData;
-    convergenceChart.data.datasets[1].data = piLineData;
-    convergenceChart.data.datasets[0].pointRadius = n <= 100 ? 2 : 0;
-    var sub = convergenceChart.options.plugins.subtitle;
-    if (sub) {
-      sub.display = n === 0;
-      sub.text = n === 0 ? "Run some trials to see your estimate converge toward \u03c0." : "";
+  function openChartOverlay() {
+    var canvas = document.getElementById("convergence-chart-maximized");
+    if (!canvas || typeof Chart === "undefined" || !chartOverlay) return;
+    if (convergenceChartMaximized) {
+      convergenceChartMaximized.destroy();
+      convergenceChartMaximized = null;
     }
-    if (convergenceChart.options.scales && convergenceChart.options.scales.x) {
-      convergenceChart.options.scales.x.max = runMax;
+    var config = getConvergenceChartConfig();
+    convergenceChartMaximized = new Chart(canvas, {
+      type: "line",
+      data: config.data,
+      options: config.options,
+    });
+    chartOverlay.hidden = false;
+    chartOverlayClose.focus();
+  }
+
+  function closeChartOverlay() {
+    if (convergenceChartMaximized) {
+      convergenceChartMaximized.destroy();
+      convergenceChartMaximized = null;
     }
-    convergenceChart.update("none");
+    if (chartOverlay) chartOverlay.hidden = true;
+  }
+
+  function initChartOverlay() {
+    if (chartMaximizeBtn) {
+      chartMaximizeBtn.addEventListener("click", openChartOverlay);
+    }
+    if (chartOverlayClose) {
+      chartOverlayClose.addEventListener("click", closeChartOverlay);
+    }
+    if (chartOverlay) {
+      var backdrop = chartOverlay.querySelector(".chart-overlay-backdrop");
+      if (backdrop) backdrop.addEventListener("click", closeChartOverlay);
+    }
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && chartOverlay && !chartOverlay.hidden) {
+        closeChartOverlay();
+      }
+    });
   }
   // #endregion
 
@@ -520,6 +574,7 @@
     if (simulate100Btn) simulate100Btn.addEventListener("click", function () { runBatch(100); });
     if (simulate1000Btn) simulate1000Btn.addEventListener("click", function () { runBatch(1000); });
     if (resetBtn) resetBtn.addEventListener("click", reset);
+    initChartOverlay();
 
     var scrollThreshold = 280;
     function updateBackToTop() {
