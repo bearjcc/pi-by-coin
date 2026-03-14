@@ -169,8 +169,16 @@ main {
 
 .panel p {
   margin: 0.55rem 0;
-  max-width: 65ch;
   color: var(--text);
+}
+
+.panel a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.panel a:hover {
+  text-decoration: underline;
 }
 
 .panel .hint {
